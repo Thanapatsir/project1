@@ -1,7 +1,8 @@
-import urllib2
+
 url = "http://teacherstechtoolbox.com/wp-content/uploads/2015/12/Code.jpg"
 
 file_name = url.split('/')[-1]
+print file_name
 socket = urllib2.urlopen(url)
 file2write = open(file_name, 'wb')
 meta = socket.info()
