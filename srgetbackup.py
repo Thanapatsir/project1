@@ -31,16 +31,16 @@ if len(sys.argv)==4:
 	s.send(rq) 
 
 	""" RECV FIRST DATA WITHOUT HEADER """
+	result = s.recv(8192)
+	num_bytes_recv += len(result)
+	index = result.find('\r\n\r\n')
+	result_wo_header = result[index+4:]
+	print result
 	data = ""
-	header_check = ""
-	while "\r\n\r\n" not in header_check:
-		result = s.recv(1)
-		header_check += result
-
 
 	""" RECV THE REST OF CONTENT """
-
 	with open(file_name, 'wb') as f:
+		data+=result_wo_header
 		while True:#(len(result) > 0):
 			print "number of byte recieve : ",num_bytes_recv
 			result = s.recv(8192)
