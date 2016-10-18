@@ -4,6 +4,7 @@ import os
 import sys
 import urlparse
 import os.path
+import time
 
 file_name = str(sys.argv[2])
 url_object = urlparse.urlparse(sys.argv[3])
@@ -51,19 +52,27 @@ def get_resume_info():  # return true if it can be resume
     return result_list  # 0=content_length 1=accept-range 2=identifier 3=content wrote
 
 
-def start_connection(port=80):
-
+def start_connection(port):
+    print ("s.connect({h},{p})") .format(h=host_name,p=port)
     return s.connect((host_name, port))
 
 
 # mode either 'resume' 'new' and if hav port
-def connector(mode, port=80, content_wrote=None):
-    start_connection(port)
+def connector(mode, port, content_wrote=None):
+    if port==None:
+
+        start_connection(80)
+    else:
+
+        start_connection(port)
+
     if mode == 'resume':
         rq = make_resume_req(host_name, path, str(
             "bytes=" + content_wrote + "-"))
+        print rq
     elif mode == 'new':
         rq = make_http_req(host_name, path)
+        print rq
     else:
         print "invalid input, pls check"
         sys.exit(1)
@@ -109,7 +118,7 @@ def resume_download(part_file_content):
 
     """ MAKE CONNECTION """
     try:
-        connector('resume', 80, content_wrote)
+        connector('resume', port, content_wrote)
     except socket.timeout:
         print("timeout error")
     except socket.error:
@@ -183,7 +192,7 @@ def new_download():
 
     """ MAKE CONNECTION """
     try:
-        connector("new", 80, None)
+        connector("new", port, None)
 
     except socket.timeout:
         print("timeout error")
@@ -254,7 +263,7 @@ def new_download():
 
 
 def main():
-
+    start = time.time()
     if check_input() == True:
         print "input accepted"
         if check_file_exist(sys.argv[2]):
@@ -275,5 +284,6 @@ def main():
             print "no such file exist"
             print "proceed to downloading"
             new_download()
-
+    elapsed = time.time() - start
+    print elapsed
 main()
