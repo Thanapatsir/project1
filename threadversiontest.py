@@ -23,6 +23,7 @@ def check_file_exist(file_name):
     else:
         return False
 
+
 def parser(url):
     url_obj = urlparse.urlparse(url)
     path = url_obj.path
@@ -113,7 +114,9 @@ def part_download(file_name, url, b_start, b_end, meta_array, index):
     except socket.error:
         print("socket error occured: ")
         meta_array[index] = False
-
+    except Exception as m:
+        print m
+        meta_array[index] = False
     s.close()
 
 
@@ -132,11 +135,13 @@ def remove_file(files):
     dirr = os.getcwd()
     return os.remove(dirr + "/" + files)
 
-def resume_allocator(out_file,url,chunk_range,chunk_dividier_size,thread_status_table,connection):
 
+def resume_allocator(out_file, url, chunk_range, chunk_dividier_size, thread_status_table, connection):
     content_length = (chunk_range[1] - chunk_range[0]) + 1
+    initial_content_length = chunk_range[1]
+    #(chunk_range[1] - chunk_range[0]) + 1
     each = int(content_length) // int(connection)
-    f_name = [file_name + str(x) for x in range(connection)]
+    #f_name = [file_name + str(x) for x in range(connection)]
     start_range = [chunk_range[0]] + [chunk_range[0] +
                                       (each * x) for x in range(connection) if x > 0]
     end_range = [x + each - 1 for x in start_range[:-1]] + [chunk_range[1]]
@@ -161,48 +166,14 @@ def resume_allocator(out_file,url,chunk_range,chunk_dividier_size,thread_status_
                 if o == False:
                     print"error found, breaking loop"
                     with open('thread_meta.txt', "wb+") as f:
-                        strr1 = str(i[0])+","+content_length
+                        strr1 = str(i[0]) + "," + str(initial_content_length)
                         f.write(strr1)
+
+                    my_dir = os.getcwd()
+                    for fname in os.listdir(my_dir):
+                        if fname.startswith("part"):
+                            os.remove(os.path.join(my_dir, fname))
                     return
-
-    except:
-        print "Big thread exception handle"
-
-
-def main_allocator(out_file, url, content_length, chunk_dividier_size, thread_status_table, connection):
-    f_name = [out_file + str(x) for x in range(connection)]
-    each = int(content_length) // int(chunk_dividier_size)
-    start_range = [0] + \
-        [x * (each) + 1 for x in range(chunk_dividier_size) if x > 0]
-    end_range = [x * each for x in range(1, chunk_dividier_size + 1)]
-
-
-    result_range = []
-    threads = []
-    chunk_divider_table = [None] * connection
-    try:
-
-        for i, j in zip(start_range, end_range):
-            result_range.append([i, j])
-        for i, j, k in zip(result_range, range(connection), thread_status_table):
-            t = threading.Thread(target=thread_allocator, args=(
-                file_name, url, i, connection, thread_status_table))
-
-            chunk_divider_table[j] = i
-            print "sending big thread : ", i
-            t.start()
-
-            t.join()
-            for o in thread_status_table:
-                if o == False:
-                    print"error found, breaking loop"
-                    with open('thread_meta.txt', "wb+") as f:
-                        strr1 = str(i[0])+","+content_length
-                        f.write(strr1)
-                    return
-    except KeyboardInterrupt:
-        print"KeyboardInterrupt"
-
     except Exception as m:
         print "Big thread exception handle"
         print m
@@ -210,8 +181,9 @@ def main_allocator(out_file, url, content_length, chunk_dividier_size, thread_st
 
 def thread_allocator(file_name, url, chunk_range, connection, meta_array):
     content_length = (chunk_range[1] - chunk_range[0]) + 1
+    #content_length = chunk_range[1]
     each = int(content_length) // int(connection)
-    f_name = [file_name + str(x) for x in range(connection)]
+    f_name = ["part_" + file_name + str(x) for x in range(connection)]
     start_range = [chunk_range[0]] + [chunk_range[0] +
                                       (each * x) for x in range(connection) if x > 0]
     end_range = [x + each - 1 for x in start_range[:-1]] + [chunk_range[1]]
@@ -239,21 +211,20 @@ def thread_allocator(file_name, url, chunk_range, connection, meta_array):
         combine_file(f_name, file_name)
         print "combine successful"
     else:
-
         print "part of file is missing"
 
 BUFF_SIZE = 2048
-url = "http://speedtest.ftp.otenet.gr/files/test10Mb.db"
-content_length = get_content_length(url) #change it to range
-content_range = [0,int(content_length)-1]
-connection = 10
+url = "http://10.27.8.20:8080/hugefile.qqq"
+content_length = get_content_length(url)  # change it to range
+content_range = [0, int(content_length) - 1]
+connection = 5
 file_name = "para.mp4"
 print content_length
 
 thread_status = [None] * connection
 
 if check_file_exist('thread_meta.txt'):
-    ##### extrac meta file"
+    # extrac meta file"
     result = []
     with open('thread_meta.txt', "rb") as fp:
         for i in fp.readlines():
@@ -261,10 +232,10 @@ if check_file_exist('thread_meta.txt'):
             print"tmp:", tmp
             result.append(int(tmp[0]))
             result.append(int(tmp[1]))
-                #result.append((eval(tmp[0]), eval(tmp[1])))
+            #result.append((eval(tmp[0]), eval(tmp[1])))
     print result
     chunk_range = result
-    resume_allocator(file_name,url,chunk_range,7,thread_status,connection)
+    resume_allocator(file_name, url, chunk_range, 2, thread_status, connection)
 else:
-    resume_allocator(file_name, url, content_range, 7, thread_status,
-                   connection)  # 5 is the slice piece
+    resume_allocator(file_name, url, content_range, 2, thread_status,
+                     connection)  # 5 is the slice piece
