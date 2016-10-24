@@ -9,8 +9,10 @@ import time
 
 def make_resume_req(host, obj, _byte):
     return ("GET {o} HTTP/1.1\r\n" + "Host: {h}\r\n" + "Connection: close\r\n" + "Range: {b}\r\n\r\n"). format(o=obj, h=host, b=_byte)
+
+
 def make_http_req(host, obj):
-	return ("GET {o} HTTP/1.1\r\nHost: {h}\r\nConnection: close\r\n\r\n"). format(o=obj, h=host)
+    return ("GET {o} HTTP/1.1\r\nHost: {h}\r\nConnection: close\r\n\r\n"). format(o=obj, h=host)
 
 
 def make_http_req(host, obj):
@@ -54,7 +56,7 @@ def get_header_as_dict(url):
         split_here = line.find(":")
         headers[line[:split_here]] = line[split_here:]
 
-    return headers#,content_length
+    return headers  # ,content_length
 
 
 def part_download(file_name, url, b_start, b_end, meta_array, index):
@@ -89,7 +91,6 @@ def part_download(file_name, url, b_start, b_end, meta_array, index):
     except Exception:
         print"error conencting"
         meta_array[index] = False
-
 
     bytes_recv = 0
     try:
@@ -134,11 +135,10 @@ def remove_file(files):
     return os.remove(dirr + "/" + files)
 
 
-
 def resume_allocator(out_file, url, chunk_range, chunk_dividier_size, thread_status_table, connection):
     content_length = (chunk_range[1] - chunk_range[0]) + 1
     initial_content_length = chunk_range[1]
-    #(chunk_range[1] - chunk_range[0]) + 1
+
     each = int(content_length) // int(chunk_dividier_size)
 
     start_range = [chunk_range[0]] + [chunk_range[0] +
@@ -146,7 +146,7 @@ def resume_allocator(out_file, url, chunk_range, chunk_dividier_size, thread_sta
     end_range = [x + each - 1 for x in start_range[:-1]] + [chunk_range[1]]
     result_range = []
     threads = []
-    to_fetch_next = [] #if keyboard interrupt happen, this will hav what to fetch next
+    to_fetch_next = []
     try:
 
         for i, j in zip(start_range, end_range):
@@ -159,7 +159,7 @@ def resume_allocator(out_file, url, chunk_range, chunk_dividier_size, thread_sta
             t.start()
             while t.isAlive():
                 t.join(1)
-            #t.join()
+            # t.join()
             for o in thread_status_table:
                 if o == False:
                     print"error found, breaking loop"
@@ -175,9 +175,11 @@ def resume_allocator(out_file, url, chunk_range, chunk_dividier_size, thread_sta
 
     except KeyboardInterrupt as m:
         print "keyboard interrupt caught"
-        if to_fetch_next[1] < initial_content_length: #download not done yet, it was interrupted by keyboard
+        # download not done yet, it was interrupted by keyboard
+        if to_fetch_next[1] < initial_content_length:
             with open('thread_meta.txt', "wb+") as f:
-                strr1 = str(to_fetch_next[1]+1)+","+str(initial_content_length)
+                strr1 = str(to_fetch_next[1] + 1) + \
+                    "," + str(initial_content_length)
                 f.write(strr1)
         else:
             print"file download is done"
@@ -187,7 +189,7 @@ def resume_allocator(out_file, url, chunk_range, chunk_dividier_size, thread_sta
     print "DONE DOWNLOADING"
 
 
-def isReady(header_dict): #take input as dict
+def isReady(header_dict):  # take input as dict
     key = header_dict.keys()
     if 'Transfer-Encoding' in key:
         print "chunk encoding found, this server doesnt support this type of tranfer, terminate program"
@@ -198,8 +200,6 @@ def isReady(header_dict): #take input as dict
     if 'Last-Modified' not in key:
         print "Last-Modified not presented, cant check if the file is the same one, terminate program"
         sys.exit(1)
-
-
 
 
 def thread_allocator(file_name, url, chunk_range, connection, meta_array):
@@ -238,7 +238,7 @@ def thread_allocator(file_name, url, chunk_range, connection, meta_array):
     else:
         print "part of file is missing"
 
-#srget -o <output file> [-c [<numConn>]] http://someurl.domain[:port]/path/to/file
+
 def optimal_partion_size(content_length):
     if content_length < 500000000:
         return 10
@@ -246,7 +246,7 @@ def optimal_partion_size(content_length):
         return 20
 
 if __name__ == "__main__":
-    if len(sys.argv)==5:
+    if len(sys.argv) == 5:
         print"setting default connections to 5"
         start = time.time()
         BUFF_SIZE = 2048
@@ -259,9 +259,9 @@ if __name__ == "__main__":
         connection = 5
         thread_status = [None] * connection
         partition_size = optimal_partion_size(content_length)
-        print "setting partition size to factor of",partition_size
+        print "setting partition size to factor of", partition_size
         if check_file_exist('thread_meta.txt'):
-            #if check_file_exist('identify_meta.txt'):
+            # if check_file_exist('identify_meta.txt'):
             result = []
             with open('thread_meta.txt', "rb") as fp:
                 for i in fp.readlines():
@@ -271,17 +271,19 @@ if __name__ == "__main__":
                     result.append(int(tmp[1]))
 
             chunk_range = result
-            resume_allocator(file_name, url, chunk_range, partition_size, thread_status, connection)
-            #else:
-            #    print "file identifier not found please delete the downloaded file and re download"
+            resume_allocator(file_name, url, chunk_range,
+                             partition_size, thread_status, connection)
+            # else:
+            # print "file identifier not found please delete the downloaded
+            # file and re download"
 
         else:
             resume_allocator(file_name, url, content_range, partition_size, thread_status,
                              connection)  # 5 is the slice piece
-        total = time.time()-start
+        total = time.time() - start
         print total
-    elif len(sys.argv)==6:
-        print"setting connections to ",sys.argv[4]
+    elif len(sys.argv) == 6:
+        print"setting connections to ", sys.argv[4]
         start = time.time()
         BUFF_SIZE = 2048
         url = sys.argv[5]
@@ -293,9 +295,9 @@ if __name__ == "__main__":
         connection = int(sys.argv[4])
         thread_status = [None] * connection
         partition_size = optimal_partion_size(content_length)
-        print "setting partition size to factor of",partition_size
+        print "setting partition size to factor of", partition_size
         if check_file_exist('thread_meta.txt'):
-            #if check_file_exist('identify_meta.txt'):
+            # if check_file_exist('identify_meta.txt'):
             result = []
             with open('thread_meta.txt', "rb") as fp:
                 for i in fp.readlines():
@@ -305,14 +307,16 @@ if __name__ == "__main__":
                     result.append(int(tmp[1]))
 
             chunk_range = result
-            resume_allocator(file_name, url, chunk_range, partition_size, thread_status, connection)
-            #else:
-            #    print "file identifier not found please delete the downloaded file and re download"
+            resume_allocator(file_name, url, chunk_range,
+                             partition_size, thread_status, connection)
+            # else:
+            # print "file identifier not found please delete the downloaded
+            # file and re download"
 
         else:
             resume_allocator(file_name, url, content_range, partition_size, thread_status,
                              connection)  # 5 is the slice piece
-        total = time.time()-start
+        total = time.time() - start
         print total
-    elif len(sys.argvs)==4:
+    elif len(sys.argvs) == 4:
         print"If you intend to use normal download, please run the previus version (check_point2)"
