@@ -4,7 +4,7 @@
 The filename 'srget' is the most up-to-date version
 ===================
 
-Remark:<br 
+Remark:<br/>
 1. If not connection given, the program will assume 5 connections as noted in the assignment
 
 2. if user wish to run the normal download, please run the previous version of 'srget' as submitted in checkpoint2
