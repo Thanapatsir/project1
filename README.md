@@ -4,9 +4,9 @@
 The filename 'srget' is the most up-to-date version
 ===================
 
-This is the final version of the srget:
-Remark:
+Remark:<br 
 1. If not connection given, the program will assume 5 connections as noted in the assignment
+
 2. if user wish to run the normal download, please run the previous version of 'srget' as submitted in checkpoint2
 3. user must parse the right inputs as bellow, (any other than that will not be accepted)
 >./srget -o output file -c http://someurl.domain[:port]/path/to/file
